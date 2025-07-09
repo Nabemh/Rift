@@ -1,4 +1,3 @@
-# router file
 from fastapi import APIRouter, Query
 from services.analysis_service import (
     get_top_threat_categories,
@@ -7,6 +6,7 @@ from services.analysis_service import (
     get_top_vulnerabilities,
     get_top_regions,
     get_top_affected_isps,
+    get_region_impact_summary,
 )
 from sqlalchemy.orm import Session
 from db.session import get_db
@@ -14,6 +14,7 @@ import pandas as pd
 from sqlalchemy import text
 from db.session import engine
 import os
+from services.reports_service import fetch_filtered_cves
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -56,6 +57,26 @@ def top_isps(limit: int = Query(10, ge=1, le=50)):
 @router.get("/summary/regions")
 def regions_summary(limit: int = Query(10, ge=1, le=50)):
     return get_top_regions(limit)
+
+@router.get("/summary/telecom-threats")
+def telecom_threat_summary(limit: int = Query(10, ge=1, le=100)):
+    """
+    Returns a unified list of telecom-related cyber reports (CVE, exploit, advisories).
+    Each item includes: name, date, source, and keywords.
+    """
+    data = fetch_filtered_cves(limit)
+    # Other sources later:
+    # data += fetch_exploitdb_entries(limit)
+    # data += fetch_vendor_advisories(limit)
+
+    return {
+        "telecom_threats": sorted(data, key=lambda x: x["date"], reverse=True),
+        "count": len(data)
+    }
+
+@router.get("/summary/heatmap")
+def region_heatmap(limit: int = Query(20, ge=1, le=100)):
+    return get_region_impact_summary(limit)
 
 # Old endpoints for backward compatibility
 @router.get("/visuals/top-threats")

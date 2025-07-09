@@ -109,3 +109,33 @@ def get_top_regions(limit=10):
             "summary_table": top_regions.reset_index().to_dict(orient="records"),
             "total_regions": len(region_summary)
         }
+
+def get_region_impact_summary(limit=20):
+    """Return threat counts by city (lowercased), excluding 'unverified' entries"""
+    with engine.connect() as connection:
+        df = pd.read_sql(f"SELECT * FROM {TABLE}", connection)
+
+    if "City" not in df.columns:
+        return {"error": "No 'City' column found."}
+
+    # Drop NaNs and normalize case
+    df = df.dropna(subset=["City"])
+    df["City"] = df["City"].str.lower().str.strip()
+
+    # Remove 'unverified' entries
+    df = df[df["City"] != "unverified"]
+
+    # Group by city and count threats
+    summary = (
+        df.groupby("City")
+          .agg({"TID": "count"})
+          .rename(columns={"TID": "Threat Count"})
+          .sort_values("Threat Count", ascending=False)
+          .head(limit)
+    )
+
+    return {
+        "heat_data": summary.reset_index().to_dict(orient="records"),
+        "total_cities": summary.shape[0]
+    }
+
