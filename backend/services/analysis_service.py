@@ -83,6 +83,9 @@ def get_top_affected_isps(limit=10):
         # Drop missing/null values
         df = df.dropna(subset=["ASNName"])
 
+        # Remove 'unverified' entries
+        df = df[df["ASNName"] != "unverified"]
+
         # Count occurrences of each ASNName
         top_isps = df["ASNName"].value_counts().head(limit).reset_index()
         top_isps.columns = ["ASNName", "Count"]
