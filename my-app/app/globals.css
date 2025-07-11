@@ -285,3 +285,14 @@ html {
     @apply bg-background text-foreground;
   }
 }
+
+.resize {
+  resize: both;
+  overflow: hidden;
+}
+
+.cursor-se-resize { cursor: se-resize; }
+.cursor-sw-resize { cursor: sw-resize; }
+.cursor-ne-resize { cursor: ne-resize; }
+.cursor-nw-resize { cursor: nw-resize; }
+.cursor-move { cursor: move; }
